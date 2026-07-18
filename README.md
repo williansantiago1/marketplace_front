@@ -1,4 +1,7 @@
 # Vitrine — Frontend
+## Importante:
+
+Para que o front funcione corretamente, clone o repositório da api: https://github.com/williansantiago1/marketplace_api e faça o apontamento da url da api rodando
 
 SPA React do marketplace **Vitrine**. Consome a API em `../api`.
 
