@@ -1,12 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { productsApi } from "../../api/products";
 import { ProductCard } from "../../components/ProductCard";
 import { Button } from "../../components/ui/Button";
 import { Spinner } from "../../components/ui/Spinner";
+import { getErrorMessage, useAuth } from "../../hooks/useAuth";
 
 export function HomePage() {
+  const { user, isAuthenticated, becomeSeller } = useAuth();
+  const navigate = useNavigate();
+  const [startingSell, setStartingSell] = useState(false);
+  const canSell = user?.role === "SELLER" || user?.role === "ADMIN";
+
   useEffect(() => {
     document.title = "Vitrine";
   }, []);
@@ -15,6 +22,26 @@ export function HomePage() {
     queryKey: ["products", "home"],
     queryFn: () => productsApi.list({ limit: 8 }),
   });
+
+  async function handleWantToSell() {
+    if (!isAuthenticated) {
+      navigate("/cadastrar");
+      return;
+    }
+    if (canSell) {
+      navigate("/vendedor");
+      return;
+    }
+    try {
+      setStartingSell(true);
+      await becomeSeller();
+      navigate("/vendedor");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    } finally {
+      setStartingSell(false);
+    }
+  }
 
   return (
     <div className="space-y-14">
@@ -40,14 +67,25 @@ export function HomePage() {
             <Link to="/produtos">
               <Button className="bg-coral hover:bg-[#d44f3f]">Ver produtos</Button>
             </Link>
-            <Link to="/cadastrar">
+            {canSell ? (
+              <Link to="/vendedor">
+                <Button
+                  variant="ghost"
+                  className="border border-sand/30 text-sand hover:bg-white/10"
+                >
+                  Ir ao painel
+                </Button>
+              </Link>
+            ) : (
               <Button
                 variant="ghost"
                 className="border border-sand/30 text-sand hover:bg-white/10"
+                disabled={startingSell}
+                onClick={() => void handleWantToSell()}
               >
-                Quero vender
+                {startingSell ? "Abrindo..." : "Quero vender"}
               </Button>
-            </Link>
+            )}
           </div>
         </div>
       </section>

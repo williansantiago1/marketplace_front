@@ -28,6 +28,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  becomeSeller: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -91,6 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     navigate("/entrar");
   }, [navigate]);
 
+  const becomeSeller = useCallback(async () => {
+    const data = await authApi.becomeSeller();
+    setAuth(data);
+    setUserState(data.user);
+    toast.success("Pronto! Você já pode vender");
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -99,8 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      becomeSeller,
     }),
-    [user, isLoading, login, register, logout],
+    [user, isLoading, login, register, logout, becomeSeller],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

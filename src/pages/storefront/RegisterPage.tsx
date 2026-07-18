@@ -6,14 +6,12 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
-import { Select } from "../../components/ui/Select";
 import { getErrorMessage, useAuth } from "../../hooks/useAuth";
 
 const schema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(8),
-  role: z.enum(["CUSTOMER", "SELLER"]),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -27,7 +25,6 @@ export function RegisterPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { role: "CUSTOMER" },
   });
 
   useEffect(() => {
@@ -38,13 +35,15 @@ export function RegisterPage() {
     <div className="mx-auto max-w-md space-y-6">
       <div>
         <h1 className="font-display text-4xl">Criar conta</h1>
-        <p className="mt-1 text-sm text-muted">Cliente ou vendedor — você escolhe.</p>
+        <p className="mt-1 text-sm text-muted">
+          Uma conta serve para comprar e, quando quiser, vender.
+        </p>
       </div>
       <form
         className="space-y-4 rounded-[var(--radius-md)] bg-white p-6"
         onSubmit={handleSubmit(async (data) => {
           try {
-            await registerUser(data);
+            await registerUser({ ...data, role: "CUSTOMER" });
             navigate("/entrar");
           } catch (e) {
             toast.error(getErrorMessage(e));
@@ -59,10 +58,6 @@ export function RegisterPage() {
           error={errors.password?.message}
           {...register("password")}
         />
-        <Select label="Tipo de conta" {...register("role")}>
-          <option value="CUSTOMER">Cliente</option>
-          <option value="SELLER">Vendedor</option>
-        </Select>
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           Cadastrar
         </Button>

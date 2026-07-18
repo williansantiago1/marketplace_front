@@ -35,4 +35,5 @@ Proxy do Vite encaminha `/api` → `localhost:3333`.
 | cliente1@marketplace.com | Senha123! | CUSTOMER |
 | seller1@marketplace.com | Senha123! | SELLER |
 | admin@marketplace.com | Senha123! | ADMIN |
-# marketplace_front
+
+Qualquer conta pode vender: no site use **Vender** / **Quero vender** (chama `POST /api/auth/become-seller` e abre o painel).

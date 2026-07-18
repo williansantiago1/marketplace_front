@@ -1,16 +1,44 @@
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { getErrorMessage, useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
 import { Button } from "../ui/Button";
 
 export function Header() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, becomeSeller } = useAuth();
   const { itemCount } = useCart();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [startingSell, setStartingSell] = useState(false);
+
+  const canSell = user?.role === "SELLER" || user?.role === "ADMIN";
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `text-sm font-medium transition ${isActive ? "text-coral" : "text-ink hover:text-petrol"}`;
+
+  async function handleWantToSell() {
+    if (!isAuthenticated) {
+      navigate("/cadastrar");
+      setOpen(false);
+      return;
+    }
+    if (canSell) {
+      navigate("/vendedor");
+      setOpen(false);
+      return;
+    }
+    try {
+      setStartingSell(true);
+      await becomeSeller();
+      navigate("/vendedor");
+      setOpen(false);
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    } finally {
+      setStartingSell(false);
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-cream/80 bg-sand/90 backdrop-blur">
@@ -36,10 +64,19 @@ export function Header() {
               Pedidos
             </NavLink>
           )}
-          {(user?.role === "SELLER" || user?.role === "ADMIN") && (
+          {canSell ? (
             <NavLink to="/vendedor" className={linkClass}>
               Painel
             </NavLink>
+          ) : (
+            <button
+              type="button"
+              className="text-sm font-medium text-ink transition hover:text-petrol disabled:opacity-60"
+              disabled={startingSell}
+              onClick={() => void handleWantToSell()}
+            >
+              {startingSell ? "Abrindo..." : "Vender"}
+            </button>
           )}
           {user?.role === "ADMIN" && (
             <NavLink to="/admin/categorias" className={linkClass}>
@@ -89,6 +126,24 @@ export function Header() {
             {isAuthenticated && (
               <Link to="/pedidos" onClick={() => setOpen(false)}>
                 Pedidos
+              </Link>
+            )}
+            {canSell ? (
+              <Link to="/vendedor" onClick={() => setOpen(false)}>
+                Painel
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled={startingSell}
+                onClick={() => void handleWantToSell()}
+              >
+                {startingSell ? "Abrindo..." : "Vender"}
+              </button>
+            )}
+            {user?.role === "ADMIN" && (
+              <Link to="/admin/categorias" onClick={() => setOpen(false)}>
+                Admin
               </Link>
             )}
             {!isAuthenticated ? (

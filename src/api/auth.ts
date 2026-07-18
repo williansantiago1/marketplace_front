@@ -26,4 +26,7 @@ export const authApi = {
   me() {
     return api.get<PublicUser>("/auth/me");
   },
+  becomeSeller() {
+    return api.post<LoginResponse>("/auth/become-seller");
+  },
 };
